@@ -1,0 +1,7 @@
+@import url("https://fonts.googleapis.com/css?family=Inter");
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Inter", "sans-serif";
+}
+
