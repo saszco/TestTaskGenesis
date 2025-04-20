@@ -33,15 +33,15 @@ export async function validateImageUrl(url, fieldName, errors) {
 
   try {
     const response = await fetch(url, { method: "HEAD" });
-    if (response.ok && imageUrlRegex.test(url) || url.trim() === "") {
+    if ((response.ok && imageUrlRegex.test(url)) || url.trim() === "") {
       return true;
     } else {
-        errors.push({
-          message: `Cannot to get response from image url. Please provide a valid link or left the input empty. The cover will be set by default.`,
-          testIdAttribute: `error-${fieldName}`,
-          fieldName,
-        });
-        return false;
+      errors.push({
+        message: `Cannot to get response from image url. Please provide a valid link or left the input empty. The cover will be set by default.`,
+        testIdAttribute: `error-${fieldName}`,
+        fieldName,
+      });
+      return false;
     }
   } catch (error) {
     errors.push({
@@ -51,4 +51,28 @@ export async function validateImageUrl(url, fieldName, errors) {
     });
     return false;
   }
+}
+
+export function validateAudioUpload(file) {
+  const isMp3 = file.type === "audio/mpeg";
+  const isLessThan7MB = file.size / 1024 / 1024 < 7;
+
+  if (!isMp3) {
+    return {
+      valid: false,
+      message: "You can only upload MP3 files",
+    };
+  }
+
+  if (!isLessThan7MB) {
+    return {
+      valid: false,
+      message:
+        "The file size is too big. Provide file with size less that 7 MB",
+    };
+  }
+
+  return {
+    valid: true,
+  };
 }

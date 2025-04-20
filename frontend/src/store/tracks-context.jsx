@@ -4,7 +4,8 @@ import { fetchTracks } from "../api/tracks-api";
 export const TracksContext = createContext({
   tracks: [],
   loading: true,
-  addTrack: () => {}
+  addTrack: () => {},
+  handleDeleteTrack: () => {}
 });
 
 export function TracksProvider({ children }) {
@@ -29,16 +30,24 @@ export function TracksProvider({ children }) {
 
   const addTrack = (newTrack) => {
     setTracks((prevTracks) => ({
-        ...prevTracks,
-        data: [newTrack, ...(prevTracks?.data || [])]
-    }))
-  }
+      ...prevTracks,
+      data: [newTrack, ...(prevTracks?.data || [])],
+    }));
+  };
+
+  const handleDeleteTrack = (trackId) => {
+    setTracks((prevTracks) => ({
+      ...prevTracks,
+      data: prevTracks?.data.filter((track) => track.id !== trackId),
+    }));
+  };
 
   const ContextValue = {
     tracks,
     loading,
-    addTrack
-  }
+    addTrack,
+    handleDeleteTrack
+  };
 
-  return <TracksContext value={ContextValue}>{children}</TracksContext>
+  return <TracksContext value={ContextValue}>{children}</TracksContext>;
 }
