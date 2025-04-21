@@ -15,3 +15,15 @@ export async function deleteTrack(id) {
       data: { id },
     });
 }
+
+export async function uploadTrackAudio(id, audioFile){
+    const formData = new FormData();
+    formData.append('file', audioFile)
+
+    const response = await axios.post(`/tracks/${id}/upload`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+}
