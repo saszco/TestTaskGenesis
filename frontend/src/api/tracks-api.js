@@ -1,34 +1,38 @@
-import axios from '../api/axios-instance'
+import axios from "../api/axios-instance";
 
-export async function createTrack(trackData){
-    const response = await axios.post('/tracks', trackData);
-    return response.data;
+export async function createTrack(trackData) {
+  const response = await axios.post("/tracks", trackData);
+  return response.data;
 }
 
-export async function fetchTracks(){
-    const response = await axios.get('/tracks');
-    return response.data
+export async function fetchTracks() {
+  const response = await axios.get("/tracks");
+  return response.data;
 }
 
 export async function deleteTrack(id) {
-    await axios.delete(`/tracks/${id}`, {
-      data: { id }, //look at this then later
-    });
+  await axios.delete(`/tracks/${id}`, {
+    data: { id }, //look at this then later
+  });
 }
 
-export async function uploadTrackAudio(id, audioFile){
-    const formData = new FormData();
-    formData.append('file', audioFile)
+export async function uploadTrackAudio(id, audioFile) {
+  const formData = new FormData();
+  formData.append("file", audioFile);
 
-    const response = await axios.post(`/tracks/${id}/upload`, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-    return response.data;
+  const response = await axios.post(`/tracks/${id}/upload`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return response.data;
 }
 
-export async function updateTrackData(id, trackData){
-    const response = await axios.put(`tracks/${id}`, trackData);
-    return response.data;
+export async function updateTrackData(id, trackData) {
+  const response = await axios.put(`/tracks/${id}`, trackData);
+  return response.data;
+}
+
+export async function deleteTrackAudio(id) {
+  await axios.delete(`/tracks/${id}/file`);
 }

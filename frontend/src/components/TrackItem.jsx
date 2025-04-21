@@ -2,7 +2,11 @@ import { Tag, Upload, Button, Modal, message } from "antd";
 import { UploadOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useState, useContext, useRef } from "react";
 import { TracksContext } from "../store/tracks-context";
-import { deleteTrack, updateTrackData } from "../api/tracks-api";
+import {
+  deleteTrack,
+  updateTrackData,
+  deleteTrackAudio,
+} from "../api/tracks-api";
 import TrackDataInput from "./TrackDataInput";
 import { validateAudioFormat, validateAudioSize } from "../utils/validation";
 import { uploadTrackAudio } from "../api/tracks-api";
@@ -10,8 +14,10 @@ import { uploadTrackAudio } from "../api/tracks-api";
 export default function TrackItem(trackData) {
   const { id, title, artist, album, genres, coverImage, audioFile, onPlay } =
     trackData;
-  const [isWarningModalOpen, setIsWarningModalOpen] = useState();
+  const [isWarningModalOpen, setIsWarningModalOpen] = useState(false);
   const [isEditingModalOpen, setIsEditingModalOpen] = useState(false);
+  const [isDeletingAudioModalOpen, setIsDeletingAudioModalOpen] =
+    useState(false);
   const [loading, setLoading] = useState(false);
   const { handleDeleteTrack, updateTrack } = useContext(TracksContext);
   const [messageApi, contextHolder] = message.useMessage();
@@ -116,44 +122,65 @@ export default function TrackItem(trackData) {
     setIsEditingModalOpen(false);
   }
 
-  async function handleEditingTrack(){
+  async function handleEditingTrack() {
     const editedTrackData = await editFormRef.current?.getFormData();
 
-    const isChanged = (
+    const isChanged =
       editedTrackData?.title !== title ||
       editedTrackData?.artist !== artist ||
       editedTrackData?.album !== album ||
       editedTrackData?.coverImage !== coverImage ||
-      editedTrackData?.genres !== genres
-    )
+      editedTrackData?.genres !== genres;
 
-    if(!isChanged){
-      showMessage('warning', 'No changes were made to the track data', 5)
+    if (!isChanged) {
+      showMessage("warning", "No changes were made to the track data", 5);
       setIsEditingModalOpen(false);
-      return
-    }
-
-    if(!editedTrackData){
       return;
     }
 
-    console.log(editedTrackData)
+    if (!editedTrackData) {
+      return;
+    }
+
+    console.log(editedTrackData);
 
     setLoading(true);
 
     try {
       const editedTrack = await updateTrackData(id, editedTrackData);
-      showMessage("success", 'Track data edited successfully', 5)
+      showMessage("success", "Track data edited successfully", 5);
       updateTrack(id, editedTrack);
-    }catch (error) {
-      console.error('Error updating track')
+    } catch (error) {
+      console.error("Error updating track");
       setLoading(false);
-      showMessage('error', 'Error updating track', 5)
-    }finally {
+      showMessage("error", "Error updating track", 5);
+    } finally {
       setTimeout(() => {
         setLoading(false);
         setIsEditingModalOpen(false);
-      }, 1000)
+      }, 1000);
+    }
+  }
+
+  function handleCancelAudioDeleting() {
+    setLoading(false);
+    setIsDeletingAudioModalOpen(false);
+  }
+
+  async function handleAudioDeleting(id) {
+    setLoading(true);
+    try {
+      await deleteTrackAudio(id);
+    } catch (error) {
+      console.error("Error deleting audio", error.message);
+      showMessage("error", "Error deleting audio", 5);
+    } finally {
+      showMessage("success", "Audio deleted successfully", 5);
+      setTimeout(() => {
+        setLoading(false);
+        setIsDeletingAudioModalOpen(false);
+        updateTrack(id, { audioFile: null });
+      }, 1000);
     }
   }
 
@@ -165,78 +192,140 @@ export default function TrackItem(trackData) {
         data-testid={`track-item-${id}`}
       >
         <div className="w-3/4 max-xl:w-full flex items-center gap-5 border-2 p-3 rounded-3xl border-blue-200 bg-blue-50">
-        <div className="flex flex-row items-center justify-between w-full flex-wrap">
-          <div className="flex items-center gap-5">
-            <img
-              src={coverImage}
-              alt="Track cover image"
-              className="w-20 h-20 object-cover rounded-2xl"
-            />
-            <div className="flex flex-col items-start gap-3">
-              <div className="flex gap-5 items-end max-lg:gap-3">
-                <h1
-                  className="text-3xl max-md:text-2xl max-sm:text-lg text-blue-500 m-0"
-                  data-testid={`track-item-${id}-title`}
-                >
-                  {title}
-                </h1>
-                <p
-                  className="text-xl max-md:text-sm max-sm:text-xs font-light text-blue-400"
-                  data-testid={`track-item-${id}-artist`}
-                >
-                  {artist}
-                </p>
-                <p className="text-blue-300 max-lg:text-sm max-sm:text-xs">
-                  {album}
+          <div className="flex flex-row items-center justify-between w-full flex-wrap">
+            <div className="flex items-center gap-5">
+              <img
+                src={coverImage}
+                alt="Track cover image"
+                className="w-20 h-20 object-cover rounded-2xl"
+              />
+              <div className="flex flex-col items-start gap-3">
+                <div className="flex gap-5 items-end max-lg:gap-3">
+                  <h1
+                    className="text-3xl max-md:text-2xl max-sm:text-lg text-blue-500 m-0"
+                    data-testid={`track-item-${id}-title`}
+                  >
+                    {title}
+                  </h1>
+                  <p
+                    className="text-xl max-md:text-sm max-sm:text-xs font-light text-blue-400"
+                    data-testid={`track-item-${id}-artist`}
+                  >
+                    {artist}
+                  </p>
+                  <p className="text-blue-300 max-lg:text-sm max-sm:text-xs">
+                    {album}
+                  </p>
+                </div>
+                <p>
+                  {genres.map((genre) => (
+                    <Tag key={genre} color="blue">
+                      {genre}
+                    </Tag>
+                  ))}
                 </p>
               </div>
-              <p>
-                {genres.map((genre) => (
-                  <Tag key={genre} color="blue">
-                    {genre}
-                  </Tag>
-                ))}
-              </p>
             </div>
-          </div>
-          {audioFile ? (<audio
-              controls
-              src={audioUrl}
-              ref={audioRef}
-              onPlay={handlePlay}
-            ></audio>) : (
-              <p className="mr-8 max-md:mt-4 text-blue-200">Click upload track</p>
+            {audioFile ? (
+              <audio
+                controls
+                src={audioUrl}
+                ref={audioRef}
+                onPlay={handlePlay}
+              ></audio>
+            ) : (
+              <p className="mr-8 max-md:mt-4 text-blue-200">
+                Click upload track
+              </p>
             )}
           </div>
         </div>
         <div className="w-1/4 max-xl:w-auto flex items-center gap-3 border-2 p-3 rounded-3xl border-blue-200 bg-blue-50">
-          <Upload
-            maxCount={1}
-            customRequest={handleUpload}
-            showUploadList={false}
+          <Modal
+            title={<h1 className="text-3xl text-red-600">Deleting audio</h1>}
+            open={isDeletingAudioModalOpen}
+            onOk={() => handleAudioDeleting(id)}
+            onCancel={handleCancelAudioDeleting}
+            footer={[
+              <Button key="back" onClick={handleCancelAudioDeleting}>
+                Cancel
+              </Button>,
+              <Button
+                key="submit"
+                type="primary"
+                color="danger"
+                variant="solid"
+                onClick={() => handleAudioDeleting(id)}
+                loading={loading}
+              >
+                Delete audio
+              </Button>,
+            ]}
           >
+            <p className="text-lg text-red-400">
+              Are you sure that you want to delete the audio? Deleting an audio
+              is an irreversible process. But then you can still upload new
+              track
+            </p>
+          </Modal>
+
+          {audioFile ? (
             <Button
-              color="primary"
-              variant="solid"
-              icon={<UploadOutlined />}
+              color="danger"
+              variant="dashed"
+              icon={<DeleteOutlined />}
               style={{ height: 80, borderRadius: 12 }}
-              data-testid={`upload-track-${id}`}
+              onClick={() => setIsDeletingAudioModalOpen(true)}
             >
-              Upload track
+              Delete audio
             </Button>
-          </Upload>
+          ) : (
+            <Upload
+              maxCount={1}
+              customRequest={handleUpload}
+              showUploadList={false}
+            >
+              <Button
+                color="primary"
+                variant="solid"
+                icon={<UploadOutlined />}
+                style={{ height: 80, borderRadius: 12 }}
+                data-testid={`upload-track-${id}`}
+              >
+                Upload track
+              </Button>
+            </Upload>
+          )}
 
           <Modal
-            title={<h1 className="text-blue-600 font-medium text-xl">Hey, wanna edit your track?</h1>}
+            title={
+              <h1 className="text-blue-600 font-medium text-xl">
+                Hey, wanna edit your track?
+              </h1>
+            }
             open={isEditingModalOpen}
             onOk={handleEditingTrack}
             onCancel={handleCancelEditing}
             footer={[
-              <Button key="back" onClick={handleCancelEditing}>Cancel</Button>,
-              <Button key="submit" type="primary" onClick={handleEditingTrack} loading={loading}>Edit a track</Button>
+              <Button key="back" onClick={handleCancelEditing}>
+                Cancel
+              </Button>,
+              <Button
+                key="submit"
+                type="primary"
+                onClick={handleEditingTrack}
+                loading={loading}
+              >
+                Edit a track
+              </Button>,
             ]}
           >
-            <TrackDataInput isEditing={isEditingModalOpen} trackId={id} ref={editFormRef} key={id}/>
+            <TrackDataInput
+              isEditing={isEditingModalOpen}
+              trackId={id}
+              ref={editFormRef}
+              key={id}
+            />
           </Modal>
 
           <Button
