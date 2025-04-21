@@ -1,15 +1,15 @@
 {
-  "title": "S&M",
+  "title": "S&",
   "artist": "Rihanna",
   "album": "S&M",
   "genres": [
     "Hip Hop",
-    "Metal"
+    "Jazz"
   ],
   "coverImage": "https://i.ytimg.com/vi/rCF8BLm6gKA/maxresdefault.jpg",
-  "slug": "sm",
+  "slug": "s",
   "id": "1745236459935",
   "createdAt": "2025-04-21T11:54:19.935Z",
-  "updatedAt": "2025-04-21T11:55:07.039Z",
+  "updatedAt": "2025-04-21T15:11:24.280Z",
   "audioFile": "1745236459935.mp3"
 }

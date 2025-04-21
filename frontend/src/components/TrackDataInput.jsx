@@ -1,11 +1,13 @@
-import { forwardRef, useContext, useImperativeHandle, useState } from "react";
+import { forwardRef, useContext, useEffect, useImperativeHandle, useState } from "react";
 import { GenresContext } from "../store/genres-context";
 import { Spin, Tag, Alert } from "antd";
 import { validateInputValue, validateImageUrl } from "../utils/validation";
+import { TracksContext } from "../store/tracks-context";
 const DEFAULT_IMG_URL = "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Apple_Music_icon.svg/2048px-Apple_Music_icon.svg.png";
 
-const TrackDataInput = forwardRef(function (props, ref) {
+const TrackDataInput = forwardRef(function ({isEditing, trackId}, ref) {
   const { genres, loading } = useContext(GenresContext);
+  const { tracks } = useContext(TracksContext);
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [validationErrors, setValidationErrors] = useState([]);
@@ -15,6 +17,19 @@ const TrackDataInput = forwardRef(function (props, ref) {
     album: "",
     coverImage: "",
   });
+  const preData = tracks.data?.find((track) => track.id === trackId); 
+
+  useEffect(() => {
+    if (isEditing && preData) {
+      setFormState({
+        title: preData.title || "",
+        artist: preData.artist || "",
+        album: preData.album || "",
+        coverImage: preData.coverImage || ""
+      })
+      setSelectedGenres(preData.genres || [])
+    }
+  }, [isEditing, preData]);
 
   useImperativeHandle(ref, () => ({
     getFormData: async () => {
@@ -61,7 +76,7 @@ const TrackDataInput = forwardRef(function (props, ref) {
       setSelectedGenres([]);
       setDropdownOpen(false);
       setValidationErrors([]);
-    },
+    }
   }));
 
   function hasError(fieldName) {
@@ -78,9 +93,7 @@ const TrackDataInput = forwardRef(function (props, ref) {
 
   function handleAddGenre(genre) {
     if (!selectedGenres.includes(genre)) {
-      setSelectedGenres((prevGenres) => {
-        setSelectedGenres([...prevGenres, genre]);
-      });
+      setSelectedGenres((prevGenres) => [...prevGenres, genre]);
     }
   }
 

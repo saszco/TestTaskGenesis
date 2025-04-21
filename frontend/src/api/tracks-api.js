@@ -12,7 +12,7 @@ export async function fetchTracks(){
 
 export async function deleteTrack(id) {
     await axios.delete(`/tracks/${id}`, {
-      data: { id },
+      data: { id }, //look at this then later
     });
 }
 
@@ -25,5 +25,10 @@ export async function uploadTrackAudio(id, audioFile){
         "Content-Type": "multipart/form-data",
       },
     });
+    return response.data;
+}
+
+export async function updateTrackData(id, trackData){
+    const response = await axios.put(`tracks/${id}`, trackData);
     return response.data;
 }

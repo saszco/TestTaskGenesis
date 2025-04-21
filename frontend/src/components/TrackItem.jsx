@@ -2,7 +2,7 @@ import { Tag, Upload, Button, Modal, message } from "antd";
 import { UploadOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useState, useContext, useRef } from "react";
 import { TracksContext } from "../store/tracks-context";
-import { deleteTrack } from "../api/tracks-api";
+import { deleteTrack, updateTrackData } from "../api/tracks-api";
 import TrackDataInput from "./TrackDataInput";
 import { validateAudioFormat, validateAudioSize } from "../utils/validation";
 import { uploadTrackAudio } from "../api/tracks-api";
@@ -11,11 +11,13 @@ export default function TrackItem(trackData) {
   const { id, title, artist, album, genres, coverImage, audioFile, onPlay } =
     trackData;
   const [isWarningModalOpen, setIsWarningModalOpen] = useState();
+  const [isEditingModalOpen, setIsEditingModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { handleDeleteTrack, updateTrack } = useContext(TracksContext);
   const [messageApi, contextHolder] = message.useMessage();
   const audioUrl = `http://localhost:3000/api/files/${audioFile}`;
   const audioRef = useRef(null);
+  const editFormRef = useRef(null);
 
   function showMessage(type, content, duration) {
     messageApi.open({
@@ -109,6 +111,52 @@ export default function TrackItem(trackData) {
     }
   }
 
+  function handleCancelEditing() {
+    setLoading(false);
+    setIsEditingModalOpen(false);
+  }
+
+  async function handleEditingTrack(){
+    const editedTrackData = await editFormRef.current?.getFormData();
+
+    const isChanged = (
+      editedTrackData?.title !== title ||
+      editedTrackData?.artist !== artist ||
+      editedTrackData?.album !== album ||
+      editedTrackData?.coverImage !== coverImage ||
+      editedTrackData?.genres !== genres
+    )
+
+    if(!isChanged){
+      showMessage('warning', 'No changes were made to the track data', 5)
+      setIsEditingModalOpen(false);
+      return
+    }
+
+    if(!editedTrackData){
+      return;
+    }
+
+    console.log(editedTrackData)
+
+    setLoading(true);
+
+    try {
+      const editedTrack = await updateTrackData(id, editedTrackData);
+      showMessage("success", 'Track data edited successfully', 5)
+      updateTrack(id, editedTrack);
+    }catch (error) {
+      console.error('Error updating track')
+      setLoading(false);
+      showMessage('error', 'Error updating track', 5)
+    }finally {
+      setTimeout(() => {
+        setLoading(false);
+        setIsEditingModalOpen(false);
+      }, 1000)
+    }
+  }
+
   return (
     <>
       {contextHolder}
@@ -151,12 +199,14 @@ export default function TrackItem(trackData) {
               </p>
             </div>
           </div>
-          {audioFile &&<audio
+          {audioFile ? (<audio
               controls
               src={audioUrl}
               ref={audioRef}
               onPlay={handlePlay}
-            ></audio>}
+            ></audio>) : (
+              <p className="mr-8 max-md:mt-4 text-blue-200">Click upload track</p>
+            )}
           </div>
         </div>
         <div className="w-1/4 max-xl:w-auto flex items-center gap-3 border-2 p-3 rounded-3xl border-blue-200 bg-blue-50">
@@ -176,12 +226,26 @@ export default function TrackItem(trackData) {
             </Button>
           </Upload>
 
+          <Modal
+            title={<h1 className="text-blue-600 font-medium text-xl">Hey, wanna edit your track?</h1>}
+            open={isEditingModalOpen}
+            onOk={handleEditingTrack}
+            onCancel={handleCancelEditing}
+            footer={[
+              <Button key="back" onClick={handleCancelEditing}>Cancel</Button>,
+              <Button key="submit" type="primary" onClick={handleEditingTrack} loading={loading}>Edit a track</Button>
+            ]}
+          >
+            <TrackDataInput isEditing={isEditingModalOpen} trackId={id} ref={editFormRef} key={id}/>
+          </Modal>
+
           <Button
             color="primary"
             variant="dashed"
             className="w-full"
             style={{ height: 80 }}
             data-testid={`edit-track-${id}`}
+            onClick={() => setIsEditingModalOpen(true)}
           >
             Edit
           </Button>
@@ -189,7 +253,7 @@ export default function TrackItem(trackData) {
           <Modal
             title={<h1 className="text-3xl text-red-600">Deleting track</h1>}
             open={isWarningModalOpen}
-            onOk={handleConfirmDeleting}
+            onOk={() => handleConfirmDeleting(id)}
             onCancel={handleCancelDeleting}
             footer={[
               <Button key="back" onClick={handleCancelDeleting}>
