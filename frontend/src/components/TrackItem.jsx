@@ -8,11 +8,12 @@ import { validateAudioFormat, validateAudioSize } from "../utils/validation";
 import { uploadTrackAudio } from "../api/tracks-api";
 
 export default function TrackItem(trackData) {
-  const { id, title, artist, album, genres, coverImage } = trackData;
+  const { id, title, artist, album, genres, coverImage, audioFile } = trackData;
   const [isWarningModalOpen, setIsWarningModalOpen] = useState();
   const [loading, setLoading] = useState(false);
   const { handleDeleteTrack } = useContext(TracksContext);
   const [messageApi, contextHolder] = message.useMessage();
+  const audioUrl = `http://localhost:3000/api/files/${audioFile}`;
 
   function showMessage(type, content, duration) {
     messageApi.open({
@@ -51,9 +52,7 @@ export default function TrackItem(trackData) {
     setIsWarningModalOpen(false);
   }
 
-  async function handleUpload({ file, onSuccess, onError }) {
-    console.log("Uploading started...");
-    
+  async function handleUpload({ file, onSuccess, onError }) {  
     if(!validateAudioFormat(file)){
       console.error('Incompatible file format. Only mp3 and wav are supported');
       showMessage('error', 'Incompatible file format. Provide MP3 or WAV file', 5)
@@ -69,8 +68,8 @@ export default function TrackItem(trackData) {
     }
 
     try {
-      await uploadTrackAudio(id, file);
-      console.log("Uploaded successfully");
+      const data = await uploadTrackAudio(id, file);
+      console.log("Uploaded successfully", data);
       showMessage('success', 'Track uploaded successfully', 3)
       onSuccess("Track uploaded");
     } catch (error) {
@@ -88,40 +87,47 @@ export default function TrackItem(trackData) {
         data-testid={`track-item-${id}`}
       >
         <div className="w-3/4 max-xl:w-full flex items-center gap-5 border-2 p-3 rounded-3xl border-blue-200 bg-blue-50">
-          <img
-            src={coverImage}
-            alt="Track cover image"
-            className="w-20 h-20 object-cover rounded-2xl"
-          ></img>
-          <div className="flex flex-col items-start gap-3">
-            <div className="flex gap-5 items-end max-lg:gap-3">
-              <h1
-                className="text-3xl max-md:text-2xl text-blue-500"
-                data-testid="track-item-{id}-title"
-              >
-                {title}
-              </h1>
-              <p
-                className="text-xl max-md:text-sm max-sm:text-xs font-light text-blue-400"
-                data-testid="track-item-{id}-artist"
-              >
-                {artist}
-              </p>
-              <p className="text-blue-300 max-lg:text-sm max-sm:text-xs">
-                {album}
+          <div className="flex items-center gap-5">
+            <img
+              src={coverImage}
+              alt="Track cover image"
+              className="w-20 h-20 object-cover rounded-2xl"
+            />
+            <div className="flex flex-col items-start gap-3">
+              <div className="flex gap-5 items-end max-lg:gap-3">
+                <h1
+                  className="text-3xl max-md:text-2xl max-sm:text-lg text-blue-500"
+                  data-testid="track-item-{id}-title"
+                >
+                  {title}
+                </h1>
+                <p
+                  className="text-xl max-md:text-sm max-sm:text-xs font-light text-blue-400"
+                  data-testid="track-item-{id}-artist"
+                >
+                  {artist}
+                </p>
+                <p className="text-blue-300 max-lg:text-sm max-sm:text-xs">
+                  {album}
+                </p>
+              </div>
+              <p>
+                {genres.map((genre) => (
+                  <Tag key={genre} color="blue">
+                    {genre}
+                  </Tag>
+                ))}
               </p>
             </div>
-            <p>
-              {genres.map((genre) => (
-                <Tag key={genre} color="blue">
-                  {genre}
-                </Tag>
-              ))}
-            </p>
+            <audio controls src={audioUrl}></audio>
           </div>
         </div>
         <div className="w-1/4 max-xl:w-auto flex items-center gap-3 border-2 p-3 rounded-3xl border-blue-200 bg-blue-50">
-          <Upload maxCount={1} customRequest={handleUpload} showUploadList={false}>
+          <Upload
+            maxCount={1}
+            customRequest={handleUpload}
+            showUploadList={false}
+          >
             <Button
               color="primary"
               variant="solid"
