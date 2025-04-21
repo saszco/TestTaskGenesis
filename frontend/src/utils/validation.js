@@ -53,26 +53,19 @@ export async function validateImageUrl(url, fieldName, errors) {
   }
 }
 
-export function validateAudioUpload(file) {
-  const isMp3 = file.type === "audio/mpeg";
-  const isLessThan7MB = file.size / 1024 / 1024 < 7;
+export function validateAudioFormat(file) {
+  const allowedMimeTypes = ['audio/mpeg', 'audio/wav', 'audio/mp3', 'audio/x-wav'];
 
-  if (!isMp3) {
-    return {
-      valid: false,
-      message: "You can only upload MP3 files",
-    };
+  if (!allowedMimeTypes.includes(file.type)) {
+    return false
   }
+  return true;
+}
 
-  if (!isLessThan7MB) {
-    return {
-      valid: false,
-      message:
-        "The file size is too big. Provide file with size less that 7 MB",
-    };
+export function validateAudioSize(file){
+  const maxAudioSize = 10 * 1024 * 1024;
+  if (file.size > maxAudioSize) {
+    return false;
   }
-
-  return {
-    valid: true,
-  };
+  return true;
 }

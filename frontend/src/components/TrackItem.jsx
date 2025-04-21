@@ -4,7 +4,7 @@ import { useState, useContext } from "react";
 import { TracksContext } from "../store/tracks-context";
 import { deleteTrack } from "../api/tracks-api";
 import TrackDataInput from "./TrackDataInput";
-import { validateAudioUpload } from "../utils/validation";
+import { validateAudioFormat, validateAudioSize } from "../utils/validation";
 import { uploadTrackAudio } from "../api/tracks-api";
 
 export default function TrackItem(trackData) {
@@ -53,12 +53,19 @@ export default function TrackItem(trackData) {
 
   async function handleUpload({ file, onSuccess, onError }) {
     console.log("Uploading started...");
-    const { valid, message: errorMessage } = validateAudioUpload(file);
-    if (!valid) {
-      console.error("Error validating file:", errorMessage);
-      showMessage('error', 'Error validating file', 5)
-      onError(new Error(errorMessage));
-      return;
+    
+    if(!validateAudioFormat(file)){
+      console.error('Incompatible file format. Only mp3 and wav are supported');
+      showMessage('error', 'Incompatible file format. Provide MP3 or WAV file', 5)
+      onError('Incompatible file format')
+      return
+    }
+
+    if(!validateAudioSize(file)){
+      console.error('File size is too large. Maximum file size is 10MB');
+      showMessage('error', 'File size is too large. Maximum file size is 10 MB', 5)
+      onError('File size is too large')
+      return
     }
 
     try {
@@ -69,7 +76,7 @@ export default function TrackItem(trackData) {
     } catch (error) {
       console.error("Error uploading track:", error.message);
       showMessage('error', 'Error uploading track', 5)
-      onError(new Error(error.message));
+      onError(error.message);
     }
   }
 
