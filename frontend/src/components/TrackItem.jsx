@@ -32,19 +32,18 @@ export default function TrackItem(trackData) {
 
     try {
       await deleteTrack(id);
-      setLoading(true);
     } catch (error) {
       console.error("Error deleting track:", error.message);
-      showMessage('error', 'Error deleting track', 5)
       setLoading(false);
     } finally {
       setTimeout(() => {
         handleDeleteTrack(id);
         setLoading(false);
         setIsWarningModalOpen(false);
-        showMessage('success', 'Track deleted successfully', 3)
       }, 1000);
     }
+
+    showMessage('success', 'Track deleted successfully', 5)
   }
 
   function handleCancelDeleting() {
@@ -97,13 +96,13 @@ export default function TrackItem(trackData) {
               <div className="flex gap-5 items-end max-lg:gap-3">
                 <h1
                   className="text-3xl max-md:text-2xl max-sm:text-lg text-blue-500"
-                  data-testid="track-item-{id}-title"
+                  data-testid={`track-item-${id}-title`}
                 >
                   {title}
                 </h1>
                 <p
                   className="text-xl max-md:text-sm max-sm:text-xs font-light text-blue-400"
-                  data-testid="track-item-{id}-artist"
+                  data-testid={`track-item-${id}-artist`}
                 >
                   {artist}
                 </p>
