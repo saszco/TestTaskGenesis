@@ -5,7 +5,8 @@ export const TracksContext = createContext({
   tracks: [],
   loading: true,
   addTrack: () => {},
-  handleDeleteTrack: () => {}
+  handleDeleteTrack: () => {},
+  updateTrack: () => {}
 });
 
 export function TracksProvider({ children }) {
@@ -42,11 +43,20 @@ export function TracksProvider({ children }) {
     }));
   };
 
+  const updateTrack = (id, newData) => {
+    setTracks((prevTracks => ({
+      ...prevTracks,
+      data: prevTracks?.data.map((track) => 
+        track.id === id ? { ...track, ...newData} : track)
+    })))
+  }
+
   const ContextValue = {
     tracks,
     loading,
     addTrack,
-    handleDeleteTrack
+    handleDeleteTrack,
+    updateTrack
   };
 
   return <TracksContext value={ContextValue}>{children}</TracksContext>;

@@ -1,6 +1,6 @@
 import { Tag, Upload, Button, Modal, message } from "antd";
 import { UploadOutlined, DeleteOutlined } from "@ant-design/icons";
-import { useState, useContext } from "react";
+import { useState, useContext, useRef } from "react";
 import { TracksContext } from "../store/tracks-context";
 import { deleteTrack } from "../api/tracks-api";
 import TrackDataInput from "./TrackDataInput";
@@ -8,19 +8,21 @@ import { validateAudioFormat, validateAudioSize } from "../utils/validation";
 import { uploadTrackAudio } from "../api/tracks-api";
 
 export default function TrackItem(trackData) {
-  const { id, title, artist, album, genres, coverImage, audioFile } = trackData;
+  const { id, title, artist, album, genres, coverImage, audioFile, onPlay } =
+    trackData;
   const [isWarningModalOpen, setIsWarningModalOpen] = useState();
   const [loading, setLoading] = useState(false);
-  const { handleDeleteTrack } = useContext(TracksContext);
+  const { handleDeleteTrack, updateTrack } = useContext(TracksContext);
   const [messageApi, contextHolder] = message.useMessage();
   const audioUrl = `http://localhost:3000/api/files/${audioFile}`;
+  const audioRef = useRef(null);
 
   function showMessage(type, content, duration) {
     messageApi.open({
       type: type,
-      content: content, 
-      duration: duration
-    })
+      content: content,
+      duration: duration,
+    });
   }
 
   function handleDeleteWarning() {
@@ -33,17 +35,17 @@ export default function TrackItem(trackData) {
     try {
       await deleteTrack(id);
     } catch (error) {
+      showMessage("error", "Error deleting track", 5);
       console.error("Error deleting track:", error.message);
       setLoading(false);
     } finally {
+      showMessage("success", "Track deleted successfully", 5);
       setTimeout(() => {
         handleDeleteTrack(id);
         setLoading(false);
         setIsWarningModalOpen(false);
       }, 1000);
     }
-
-    showMessage('success', 'Track deleted successfully', 5)
   }
 
   function handleCancelDeleting() {
@@ -51,30 +53,59 @@ export default function TrackItem(trackData) {
     setIsWarningModalOpen(false);
   }
 
-  async function handleUpload({ file, onSuccess, onError }) {  
-    if(!validateAudioFormat(file)){
-      console.error('Incompatible file format. Only mp3 and wav are supported');
-      showMessage('error', 'Incompatible file format. Provide MP3 or WAV file', 5)
-      onError('Incompatible file format')
-      return
+  async function handleUpload({ file, onSuccess, onError }) {
+    if (audioFile) {
+      console.error("Audio file already uploaded");
+      showMessage(
+        "warning",
+        'Audio file already uploaded. Click "Edit" if you want to change',
+        5
+      );
+      return;
     }
 
-    if(!validateAudioSize(file)){
-      console.error('File size is too large. Maximum file size is 10MB');
-      showMessage('error', 'File size is too large. Maximum file size is 10 MB', 5)
-      onError('File size is too large')
-      return
+    if (!validateAudioFormat(file)) {
+      console.error("Incompatible file format. Only mp3 and wav are supported");
+      showMessage(
+        "error",
+        "Incompatible file format. Provide MP3 or WAV file",
+        5
+      );
+      onError("Incompatible file format");
+      return;
     }
 
-    try {
-      const data = await uploadTrackAudio(id, file);
-      console.log("Uploaded successfully", data);
-      showMessage('success', 'Track uploaded successfully', 3)
-      onSuccess("Track uploaded");
-    } catch (error) {
-      console.error("Error uploading track:", error.message);
-      showMessage('error', 'Error uploading track', 5)
-      onError(error.message);
+    if (!validateAudioSize(file)) {
+      console.error("File size is too large. Maximum file size is 10MB");
+      showMessage(
+        "error",
+        "File size is too large. Maximum file size is 10 MB",
+        5
+      );
+      onError("File size is too large");
+      return;
+    }
+
+    if (!audioFile) {
+      try {
+        const data = await uploadTrackAudio(id, file);
+
+        updateTrack(id, { audioFile: data.audioFile });
+
+        console.log("Uploaded successfully", data);
+        showMessage("success", "Track uploaded successfully", 3);
+        onSuccess("Track uploaded");
+      } catch (error) {
+        console.error("Error uploading track:", error.message);
+        showMessage("error", "Error uploading track", 5);
+        onError(error.message);
+      }
+    }
+  }
+
+  function handlePlay() {
+    if (onPlay && audioRef.current) {
+      onPlay(audioRef.current);
     }
   }
 
@@ -86,6 +117,7 @@ export default function TrackItem(trackData) {
         data-testid={`track-item-${id}`}
       >
         <div className="w-3/4 max-xl:w-full flex items-center gap-5 border-2 p-3 rounded-3xl border-blue-200 bg-blue-50">
+        <div className="flex flex-row items-center justify-between w-full flex-wrap">
           <div className="flex items-center gap-5">
             <img
               src={coverImage}
@@ -95,7 +127,7 @@ export default function TrackItem(trackData) {
             <div className="flex flex-col items-start gap-3">
               <div className="flex gap-5 items-end max-lg:gap-3">
                 <h1
-                  className="text-3xl max-md:text-2xl max-sm:text-lg text-blue-500"
+                  className="text-3xl max-md:text-2xl max-sm:text-lg text-blue-500 m-0"
                   data-testid={`track-item-${id}-title`}
                 >
                   {title}
@@ -118,7 +150,13 @@ export default function TrackItem(trackData) {
                 ))}
               </p>
             </div>
-            <audio controls src={audioUrl}></audio>
+          </div>
+          {audioFile &&<audio
+              controls
+              src={audioUrl}
+              ref={audioRef}
+              onPlay={handlePlay}
+            ></audio>}
           </div>
         </div>
         <div className="w-1/4 max-xl:w-auto flex items-center gap-3 border-2 p-3 rounded-3xl border-blue-200 bg-blue-50">
@@ -132,7 +170,7 @@ export default function TrackItem(trackData) {
               variant="solid"
               icon={<UploadOutlined />}
               style={{ height: 80, borderRadius: 12 }}
-              data-testid="upload-track-{id}"
+              data-testid={`upload-track-${id}`}
             >
               Upload track
             </Button>
@@ -143,7 +181,7 @@ export default function TrackItem(trackData) {
             variant="dashed"
             className="w-full"
             style={{ height: 80 }}
-            data-testid="edit-track-{id}"
+            data-testid={`edit-track-${id}`}
           >
             Edit
           </Button>
@@ -179,7 +217,7 @@ export default function TrackItem(trackData) {
             color="danger"
             variant="outlined"
             style={{ height: 60, width: 60, borderRadius: 100 }}
-            data-testid="delete-track-{id}"
+            data-testid={`delete-track-${id}`}
             onClick={handleDeleteWarning}
           >
             <DeleteOutlined />
@@ -189,4 +227,3 @@ export default function TrackItem(trackData) {
     </>
   );
 }
-
