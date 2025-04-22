@@ -5,8 +5,8 @@ export async function createTrack(trackData) {
   return response.data;
 }
 
-export async function fetchTracks() {
-  const response = await axios.get("/tracks");
+export async function fetchTracks(page = 1) {
+  const response = await axios.get(`/tracks?page=${page}&limit=10`);
   return response.data;
 }
 

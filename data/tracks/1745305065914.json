@@ -1,0 +1,15 @@
+{
+  "title": "Test",
+  "artist": "Test",
+  "album": "test",
+  "genres": [
+    "Hip Hop",
+    "Metal",
+    "Indie"
+  ],
+  "coverImage": "https://cdn-images.dzcdn.net/images/artist/9babb635296cac585513840c0732c20f/1900x1900-000000-80-0-0.jpg",
+  "slug": "test",
+  "id": "1745305065914",
+  "createdAt": "2025-04-22T06:57:45.914Z",
+  "updatedAt": "2025-04-22T06:57:45.914Z"
+}

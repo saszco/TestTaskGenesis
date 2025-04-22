@@ -4,6 +4,8 @@ import { fetchTracks } from "../api/tracks-api";
 export const TracksContext = createContext({
   tracks: [],
   loading: true,
+  currentPage: 1,
+  setCurrentPage: () => {},
   addTrack: () => {},
   handleDeleteTrack: () => {},
   updateTrack: () => {}
@@ -12,22 +14,23 @@ export const TracksContext = createContext({
 export function TracksProvider({ children }) {
   const [tracks, setTracks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const loadTracks = async (currentPage) => {
+    try {
+      const data = await fetchTracks(currentPage);
+      setTracks(data);
+    } catch (error) {
+      console.error("Error fetching tracks:", error.message);
+      setLoading(false);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadTracks = async () => {
-      try {
-        const data = await fetchTracks();
-        setTracks(data);
-      } catch (error) {
-        console.error("Error fetching tracks:", error.message);
-        setLoading(false);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadTracks();
-  }, []);
+    loadTracks(currentPage);
+  }, [currentPage]);
 
   const addTrack = (newTrack) => {
     setTracks((prevTracks) => ({
@@ -54,6 +57,8 @@ export function TracksProvider({ children }) {
   const ContextValue = {
     tracks,
     loading,
+    currentPage,
+    setCurrentPage,
     addTrack,
     handleDeleteTrack,
     updateTrack
