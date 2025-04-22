@@ -1,5 +1,5 @@
-import { useContext, useRef, useState } from "react";
-import { Pagination, Spin } from "antd";
+import { useContext, useRef } from "react";
+import { Spin } from "antd";
 import { TracksContext } from "../store/tracks-context";
 import TrackItem from "./TrackItem.jsx";
 import PaginationBox from "./PaginationBox.jsx";

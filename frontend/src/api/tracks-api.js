@@ -5,8 +5,16 @@ export async function createTrack(trackData) {
   return response.data;
 }
 
-export async function fetchTracks(page = 1) {
-  const response = await axios.get(`/tracks?page=${page}&limit=10`);
+export async function fetchTracks({ page = 1, sortBy = null, order = null } = {}){
+  const params = new URLSearchParams();
+  params.append('page', page);
+  params.append('limit', 10);
+  if (sortBy && order) {
+    params.append('sort', sortBy);
+    params.append('order', order);
+  }
+
+  const response = await axios.get(`/tracks?${params.toString()}`);
   return response.data;
 }
 

@@ -5,7 +5,11 @@ export const TracksContext = createContext({
   tracks: [],
   loading: true,
   currentPage: 1,
+  sortBy: null,
+  order: null,
   setCurrentPage: () => {},
+  setSortBy: () => {},
+  setOrder: () => {},
   addTrack: () => {},
   handleDeleteTrack: () => {},
   updateTrack: () => {}
@@ -15,10 +19,13 @@ export function TracksProvider({ children }) {
   const [tracks, setTracks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortBy, setSortBy] = useState();
+  const [order, setOrder] = useState();
 
-  const loadTracks = async (currentPage) => {
+  const loadTracks = async () => {
+    setLoading(true);
     try {
-      const data = await fetchTracks(currentPage);
+      const data = await fetchTracks({page: currentPage, sortBy, order});
       setTracks(data);
     } catch (error) {
       console.error("Error fetching tracks:", error.message);
@@ -29,8 +36,10 @@ export function TracksProvider({ children }) {
   };
 
   useEffect(() => {
-    loadTracks(currentPage);
-  }, [currentPage]);
+    if ((sortBy && order) || (!sortBy && !order)) {
+      loadTracks();
+    }
+  }, [currentPage, order, sortBy]);
 
   const addTrack = (newTrack) => {
     setTracks((prevTracks) => ({
@@ -58,10 +67,14 @@ export function TracksProvider({ children }) {
     tracks,
     loading,
     currentPage,
+    sortBy,
+    order,
     setCurrentPage,
+    setSortBy,
+    setOrder,
     addTrack,
     handleDeleteTrack,
-    updateTrack
+    updateTrack,
   };
 
   return <TracksContext value={ContextValue}>{children}</TracksContext>;

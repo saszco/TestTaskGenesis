@@ -21,7 +21,7 @@ export default function TrackItem(trackData) {
   const [loading, setLoading] = useState(false);
   const { handleDeleteTrack, updateTrack } = useContext(TracksContext);
   const [messageApi, contextHolder] = message.useMessage();
-  const audioUrl = `http://localhost:3000/api/files/${audioFile}`;
+  const audioUrl = `http://localhost:8000/api/files/${audioFile}`;
   const audioRef = useRef(null);
   const editFormRef = useRef(null);
 
