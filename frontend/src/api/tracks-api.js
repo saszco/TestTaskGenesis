@@ -5,13 +5,16 @@ export async function createTrack(trackData) {
   return response.data;
 }
 
-export async function fetchTracks({ page = 1, sortBy = null, order = null } = {}){
+export async function fetchTracks({ page = 1, sortBy = null, order = null, genre = [] } = {}){
   const params = new URLSearchParams();
   params.append('page', page);
   params.append('limit', 10);
   if (sortBy && order) {
     params.append('sort', sortBy);
     params.append('order', order);
+  }
+  if (genre.length > 0){
+    params.append('genre', genre);
   }
 
   const response = await axios.get(`/tracks?${params.toString()}`);

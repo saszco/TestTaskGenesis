@@ -5,3 +5,10 @@
   --font-display: "Inter", "sans-serif";
 }
 
+@layer utilities {
+  .nowrap-select .ant-select-selection-overflow {
+    @apply flex whitespace-nowrap overflow-x-auto pl-2;
+    flex-wrap: nowrap !important;
+  }
+}
+

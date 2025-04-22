@@ -1,13 +1,11 @@
 import { forwardRef, useContext, useEffect, useImperativeHandle, useState } from "react";
-import { GenresContext } from "../store/genres-context";
 import { Spin, Tag, Alert } from "antd";
 import { validateInputValue, validateImageUrl } from "../utils/validation";
 import { TracksContext } from "../store/tracks-context";
 const DEFAULT_IMG_URL = "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Apple_Music_icon.svg/2048px-Apple_Music_icon.svg.png";
 
 const TrackDataInput = forwardRef(function ({isEditing, trackId}, ref) {
-  const { genres, loading } = useContext(GenresContext);
-  const { tracks } = useContext(TracksContext);
+  const { tracks, genres, loading } = useContext(TracksContext);
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [validationErrors, setValidationErrors] = useState([]);
