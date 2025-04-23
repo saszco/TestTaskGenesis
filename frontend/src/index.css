@@ -7,8 +7,11 @@
 
 @layer utilities {
   .nowrap-select .ant-select-selection-overflow {
-    @apply flex whitespace-nowrap overflow-x-auto pl-2;
+    @apply flex whitespace-nowrap overflow-x-auto;
     flex-wrap: nowrap !important;
   }
 }
 
+body {
+  @apply bg-cover bg-center bg-no-repeat min-h-screen bg-[url('/genMusicNesis-background.png')];
+}

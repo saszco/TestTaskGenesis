@@ -13,7 +13,6 @@ export default function TracksList() {
   const handleCurrentPlayingTrack = (newAudio) => {
     if(currentAudioRef.current && currentAudioRef.current !== newAudio){
       currentAudioRef.current.pause();
-      currentAudioRef.current.currentTime = 0;
     }
     currentAudioRef.current = newAudio;
   }
@@ -21,7 +20,10 @@ export default function TracksList() {
   return (
     <>
       {tracks.data?.length === 0 && (
-        <p className="text-center text-3xl text-blue-300 font-light mt-10">There are no matched tracks</p>
+        <div className="flex flex-col items-center justify-center">
+          <p className="text-center text-3xl text-blue-300 font-light mt-10">There are no matched tracks</p>
+          <img src="/genMusicNesis-logo-with-text.png" className="mt-8 w-1/3"/>
+        </div>
       )}
       {loading ? (
         <Spin spinning={loading} fullscreen />

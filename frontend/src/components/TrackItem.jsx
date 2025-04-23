@@ -1,4 +1,4 @@
-import { Tag, Upload, Button, Modal, message } from "antd";
+import { Tag, Upload, Button, Modal, message, Checkbox } from "antd";
 import { UploadOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useState, useContext, useRef } from "react";
 import { TracksContext } from "../store/tracks-context";
@@ -14,16 +14,21 @@ import { uploadTrackAudio } from "../api/tracks-api";
 export default function TrackItem(trackData) {
   const { id, title, artist, album, genres, coverImage, audioFile, onPlay } =
     trackData;
-  const [isWarningModalOpen, setIsWarningModalOpen] = useState(false);
-  const [isEditingModalOpen, setIsEditingModalOpen] = useState(false);
-  const [isDeletingAudioModalOpen, setIsDeletingAudioModalOpen] =
-    useState(false);
+  const {
+    handleDeleteTrack,
+    updateTrack
+  } = useContext(TracksContext);
   const [loading, setLoading] = useState(false);
-  const { handleDeleteTrack, updateTrack } = useContext(TracksContext);
   const [messageApi, contextHolder] = message.useMessage();
   const audioUrl = `http://localhost:8000/api/files/${audioFile}`;
   const audioRef = useRef(null);
   const editFormRef = useRef(null);
+  const [isModalOpen, setIsModalOpen] = useState({
+      editing: false,
+      deletingAudio: false,
+      deletingTrack: false,
+      deletingSelectedTracks: false
+    });
 
   function showMessage(type, content, duration) {
     messageApi.open({
@@ -31,10 +36,6 @@ export default function TrackItem(trackData) {
       content: content,
       duration: duration,
     });
-  }
-
-  function handleDeleteWarning() {
-    setIsWarningModalOpen(true);
   }
 
   async function handleConfirmDeleting(id) {
@@ -51,14 +52,9 @@ export default function TrackItem(trackData) {
       setTimeout(() => {
         handleDeleteTrack(id);
         setLoading(false);
-        setIsWarningModalOpen(false);
+        setIsModalOpen((prev) => ({ ...prev, deletingTrack: false }));
       }, 1000);
     }
-  }
-
-  function handleCancelDeleting() {
-    setLoading(false);
-    setIsWarningModalOpen(false);
   }
 
   async function handleUpload({ file, onSuccess, onError }) {
@@ -117,11 +113,6 @@ export default function TrackItem(trackData) {
     }
   }
 
-  function handleCancelEditing() {
-    setLoading(false);
-    setIsEditingModalOpen(false);
-  }
-
   async function handleEditingTrack() {
     const editedTrackData = await editFormRef.current?.getFormData();
 
@@ -134,15 +125,13 @@ export default function TrackItem(trackData) {
 
     if (!isChanged) {
       showMessage("warning", "No changes were made to the track data", 5);
-      setIsEditingModalOpen(false);
+      setIsModalOpen((prev) => ({ ...prev, editing: false }));
       return;
     }
 
     if (!editedTrackData) {
       return;
     }
-
-    console.log(editedTrackData);
 
     setLoading(true);
 
@@ -157,14 +146,9 @@ export default function TrackItem(trackData) {
     } finally {
       setTimeout(() => {
         setLoading(false);
-        setIsEditingModalOpen(false);
+        setIsModalOpen((prev) => ({ ...prev, editing: false }));
       }, 1000);
     }
-  }
-
-  function handleCancelAudioDeleting() {
-    setLoading(false);
-    setIsDeletingAudioModalOpen(false);
   }
 
   async function handleAudioDeleting(id) {
@@ -178,10 +162,20 @@ export default function TrackItem(trackData) {
       showMessage("success", "Audio deleted successfully", 5);
       setTimeout(() => {
         setLoading(false);
-        setIsDeletingAudioModalOpen(false);
+        setIsModalOpen((prev) => ({ ...prev, deletingAudio: false }));
         updateTrack(id, { audioFile: null });
       }, 1000);
     }
+  }
+
+  function handleCloseModal() {
+    setIsModalOpen({
+      editing: false,
+      deletingAudio: false,
+      deletingTrack: false,
+      deletingSelectedTracks: false
+    });
+    setLoading(false);
   }
 
   return (
@@ -191,7 +185,7 @@ export default function TrackItem(trackData) {
         className="flex flex-row gap-5 max-xl:flex-wrap"
         data-testid={`track-item-${id}`}
       >
-        <div className="w-3/4 max-xl:w-full flex items-center gap-5 border-2 p-3 rounded-3xl border-blue-200 bg-blue-50">
+        <div className="w-3/4 max-xl:w-full flex items-center gap-5 border-2 p-3 rounded-3xl border-blue-300 bg-stone-50 hover:bg-blue-50 hover:border-blue-400 transition-all duration-300">
           <div className="flex flex-row items-center justify-between w-full flex-wrap">
             <div className="flex items-center gap-5">
               <img
@@ -243,11 +237,11 @@ export default function TrackItem(trackData) {
         <div className="w-1/4 max-xl:w-auto flex items-center gap-3 border-2 p-3 rounded-3xl border-blue-200 bg-blue-50">
           <Modal
             title={<h1 className="text-3xl text-red-600">Deleting audio</h1>}
-            open={isDeletingAudioModalOpen}
+            open={isModalOpen.deletingAudio}
             onOk={() => handleAudioDeleting(id)}
-            onCancel={handleCancelAudioDeleting}
+            onCancel={handleCloseModal}
             footer={[
-              <Button key="back" onClick={handleCancelAudioDeleting}>
+              <Button key="back" onClick={handleCloseModal}>
                 Cancel
               </Button>,
               <Button
@@ -275,7 +269,9 @@ export default function TrackItem(trackData) {
               variant="dashed"
               icon={<DeleteOutlined />}
               style={{ height: 80, borderRadius: 12 }}
-              onClick={() => setIsDeletingAudioModalOpen(true)}
+              onClick={() =>
+                setIsModalOpen((prev) => ({ ...prev, deletingAudio: true }))
+              }
             >
               Delete audio
             </Button>
@@ -303,11 +299,11 @@ export default function TrackItem(trackData) {
                 Hey, wanna edit your track?
               </h1>
             }
-            open={isEditingModalOpen}
+            open={isModalOpen.editing}
             onOk={handleEditingTrack}
-            onCancel={handleCancelEditing}
+            onCancel={handleCloseModal}
             footer={[
-              <Button key="back" onClick={handleCancelEditing}>
+              <Button key="back" onClick={handleCloseModal}>
                 Cancel
               </Button>,
               <Button
@@ -321,7 +317,7 @@ export default function TrackItem(trackData) {
             ]}
           >
             <TrackDataInput
-              isEditing={isEditingModalOpen}
+              isEditing={isModalOpen.editing}
               trackId={id}
               ref={editFormRef}
               key={id}
@@ -334,18 +330,20 @@ export default function TrackItem(trackData) {
             className="w-full"
             style={{ height: 80 }}
             data-testid={`edit-track-${id}`}
-            onClick={() => setIsEditingModalOpen(true)}
+            onClick={() =>
+              setIsModalOpen((prev) => ({ ...prev, editing: true }))
+            }
           >
             Edit
           </Button>
 
           <Modal
             title={<h1 className="text-3xl text-red-600">Deleting track</h1>}
-            open={isWarningModalOpen}
+            open={isModalOpen.deletingTrack}
             onOk={() => handleConfirmDeleting(id)}
-            onCancel={handleCancelDeleting}
+            onCancel={handleCloseModal}
             footer={[
-              <Button key="back" onClick={handleCancelDeleting}>
+              <Button key="back" onClick={handleCloseModal}>
                 Cancel
               </Button>,
               <Button
@@ -371,7 +369,9 @@ export default function TrackItem(trackData) {
             variant="outlined"
             style={{ height: 60, width: 60, borderRadius: 100 }}
             data-testid={`delete-track-${id}`}
-            onClick={handleDeleteWarning}
+            onClick={() =>
+              setIsModalOpen((prev) => ({ ...prev, deletingTrack: true }))
+            }
           >
             <DeleteOutlined />
           </Button>

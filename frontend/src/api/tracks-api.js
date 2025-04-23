@@ -5,19 +5,30 @@ export async function createTrack(trackData) {
   return response.data;
 }
 
-export async function fetchTracks({ page = 1, limit = null, sortBy = null, order = null, genre = [], artist = null } = {}){
+export async function fetchTracks({
+  page = 1,
+  limit = null,
+  sortBy = null,
+  order = null,
+  genre = [],
+  artist = null,
+  search = null,
+} = {}) {
   const params = new URLSearchParams();
-  params.append('page', page);
-  params.append('limit', limit);
+  params.append("page", page);
+  params.append("limit", limit);
   if (sortBy && order) {
-    params.append('sort', sortBy);
-    params.append('order', order);
+    params.append("sort", sortBy);
+    params.append("order", order);
   }
-  if (genre.length > 0){
-    params.append('genre', genre);
+  if (genre.length > 0) {
+    params.append("genre", genre);
   }
-  if(artist){
-    params.append('artist', artist);
+  if (artist) {
+    params.append("artist", artist);
+  }
+  if (search) {
+    params.append("search", search);
   }
 
   const response = await axios.get(`/tracks?${params.toString()}`);

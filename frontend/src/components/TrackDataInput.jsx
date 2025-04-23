@@ -217,7 +217,7 @@ const TrackDataInput = forwardRef(function ({isEditing, trackId}, ref) {
                       type="button"
                       onClick={() => handleRemoveGenre(genre)}
                     >
-                      <i class="fa fa-times" aria-hidden="true"></i>
+                      <i className="fa fa-times" aria-hidden="true"></i>
                     </button>
                   </span>
                 </Tag>
@@ -229,9 +229,9 @@ const TrackDataInput = forwardRef(function ({isEditing, trackId}, ref) {
               className="text-blue-400 hover:text-blue-500"
             >
               {isDropdownOpen ? (
-                <i class="fa fa-eye-slash" aria-hidden="true"></i>
+                <i className="fa fa-eye-slash" aria-hidden="true"></i>
               ) : (
-                <i class="fa fa-plus" aria-hidden="true"></i>
+                <i className="fa fa-plus" aria-hidden="true"></i>
               )}
               {isDropdownOpen ? " Hide" : " Click"}
             </button>

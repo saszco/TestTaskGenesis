@@ -1,0 +1,14 @@
+{
+  "title": "test",
+  "artist": "test",
+  "album": "test",
+  "genres": [
+    "Hip Hop",
+    "Metal"
+  ],
+  "coverImage": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Apple_Music_icon.svg/2048px-Apple_Music_icon.svg.png",
+  "slug": "test",
+  "id": "1745432410258",
+  "createdAt": "2025-04-23T18:20:10.258Z",
+  "updatedAt": "2025-04-23T18:20:10.258Z"
+}
