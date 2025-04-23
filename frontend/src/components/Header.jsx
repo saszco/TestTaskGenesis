@@ -3,8 +3,8 @@ import { useContext, useEffect, useState } from "react";
 import { TracksContext } from "../store/tracks-context.jsx";
 import { Select, Button, Divider, Tag } from "antd";
 
-function tagRender({label, onClose}) {
-  const onPreventMouseDown = event => {
+function tagRender({ label, onClose }) {
+  const onPreventMouseDown = (event) => {
     event.preventDefault();
     event.stopPropagation();
   };
@@ -22,12 +22,30 @@ function tagRender({label, onClose}) {
 }
 
 export default function Header() {
-  const { sortBy, order, setSortBy, setOrder, genres, setSelectedGenresForFilter } =
-    useContext(TracksContext);
+  const {
+    sortBy,
+    order,
+    setSortBy,
+    setOrder,
+    genres,
+    setSelectedGenresForFilter,
+    initialTracks,
+    setSelectedArtistForFilter,
+  } = useContext(TracksContext);
 
   const options = genres.map((genre) => ({
-    value: genre
+    value: genre,
   }));
+
+  const artists = [
+    ...new Set(initialTracks.data?.map((track) => track.artist)),
+  ].sort();
+
+  const artistsOptions = artists.map((artist) => ({
+    value: artist,
+  }));
+
+  console.log(artists);
 
   return (
     <header
@@ -44,6 +62,7 @@ export default function Header() {
           style={{ borderColor: "#2c8bc7", height: 30 }}
         />
         <Select
+          allowClear
           size="large"
           style={{ width: 160 }}
           placeholder="Sort by"
@@ -78,13 +97,27 @@ export default function Header() {
         />
         <Select
           className="nowrap-select"
+          allowClear
           mode="multiple"
           tagRender={tagRender}
-          style={{ width: 300 }}
+          style={{ width: 200 }}
           size="large"
           options={options}
-          onChange={(value) => setSelectedGenresForFilter(value)}
-          placeholder="Filter tracks by genres"
+          onChange={(value) => setSelectedGenresForFilter(value || [])}
+          placeholder="Filter by genres"
+        />
+        <Divider
+          type="vertical"
+          style={{ borderColor: "#2c8bc7", height: 30 }}
+        />
+        <Select
+          allowClear
+          showSearch
+          placeholder='Filter by artist'
+          style={{ width: 150 }}
+          size="large"
+          options={artistsOptions}
+          onChange={(value) => setSelectedArtistForFilter(value || [])}
         />
       </div>
     </header>

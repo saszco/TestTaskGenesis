@@ -3,6 +3,7 @@ import { fetchTracks } from "../api/tracks-api";
 import { fetchGenres } from "../api/genres-api";
 
 export const TracksContext = createContext({
+  initialTracks: [],
   tracks: [],
   genres: [],
   loading: true,
@@ -13,12 +14,14 @@ export const TracksContext = createContext({
   setSortBy: () => {},
   setOrder: () => {},
   setSelectedGenresForFilter: () => {},
+  setSelectedArtistForFilter: () => {},
   addTrack: () => {},
   handleDeleteTrack: () => {},
   updateTrack: () => {}
 });
 
 export function TracksProvider({ children }) {
+  const [initialTracks, setInitialTracks] = useState([])
   const [tracks, setTracks] = useState([]);
   const [genres, setGenres] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,12 +29,13 @@ export function TracksProvider({ children }) {
   const [sortBy, setSortBy] = useState();
   const [order, setOrder] = useState();
   const [selectedGenresForFilter, setSelectedGenresForFilter] = useState([])
+  const [selectedArtistForFilter, setSelectedArtistForFilter] = useState()
 
   useEffect(() => {
     const loadTracks = async () => {
       setLoading(true);
       try {
-        const data = await fetchTracks({page: currentPage, sortBy, order, genre: selectedGenresForFilter});
+        const data = await fetchTracks({page: currentPage, limit: 10, sortBy, order, genre: selectedGenresForFilter, artist: selectedArtistForFilter});
         setTracks(data);
       } catch (error) {
         console.error("Error fetching tracks:", error.message);
@@ -44,7 +48,22 @@ export function TracksProvider({ children }) {
     if ((sortBy && order) || (!sortBy && !order)) {
       loadTracks();
     }
-  }, [currentPage, order, sortBy, selectedGenresForFilter]);
+  }, [currentPage, order, sortBy, selectedGenresForFilter, selectedArtistForFilter]);
+
+  useEffect(() => {
+    const loadInitialTracks = async (totalTracksCount) => {
+      try{
+        const data = await fetchTracks({page: 1, limit: totalTracksCount})
+        setInitialTracks(data);
+      }catch(error){
+        console.error('Error fetching initial tracks:', error.message)
+      }
+    }
+
+    if(initialTracks.length === 0 && tracks.meta?.total){
+      loadInitialTracks(tracks.meta.total);
+    } 
+  }, [tracks])
 
   useEffect(() => {
     const loadGenres = async () => {
@@ -90,6 +109,7 @@ export function TracksProvider({ children }) {
   }
 
   const ContextValue = {
+    initialTracks,
     tracks,
     genres, 
     loading,
@@ -100,6 +120,7 @@ export function TracksProvider({ children }) {
     setSortBy,
     setOrder,
     setSelectedGenresForFilter,
+    setSelectedArtistForFilter,
     addTrack,
     handleDeleteTrack,
     updateTrack,
