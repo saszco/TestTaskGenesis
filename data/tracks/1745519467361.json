@@ -1,0 +1,14 @@
+{
+  "title": "новий",
+  "artist": "новий",
+  "album": "новий",
+  "genres": [
+    "Jazz",
+    "Classical"
+  ],
+  "coverImage": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Apple_Music_icon.svg/2048px-Apple_Music_icon.svg.png",
+  "slug": "",
+  "id": "1745519467361",
+  "createdAt": "2025-04-24T18:31:07.361Z",
+  "updatedAt": "2025-04-24T18:31:07.361Z"
+}

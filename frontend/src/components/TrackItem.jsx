@@ -130,7 +130,6 @@ export default function TrackItem(trackData) {
       setLoading(false);
       showMessage("error", "Error updating track");
     } finally {
-      showMessage("success", "Track data edited successfully");
       setTimeout(() => {
         setLoading(false);
         setIsModalOpen((prev) => ({ ...prev, editing: false }));
@@ -167,7 +166,7 @@ export default function TrackItem(trackData) {
 
   return (
     <>
-      {<ToastContainer />}
+      <ToastContainer />
       <div
         className="flex flex-row gap-5 max-xl:flex-wrap"
         data-testid={`track-item-${id}`}

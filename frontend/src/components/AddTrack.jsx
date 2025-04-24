@@ -54,6 +54,7 @@ export default function AddTrackButton() {
 
   return (
     <>
+      <ToastContainer />
       <Modal
         title={<h1 className="text-blue-600 font-medium text-xl">Hey, wanna add new track?</h1>}
         open={isCreateModalOpen}
