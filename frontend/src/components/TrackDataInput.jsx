@@ -48,7 +48,7 @@ const TrackDataInput = forwardRef(function ({isEditing, trackId}, ref) {
         coverImage,
         "coverImage",
         errors
-      ); //look at this later about data-testid attribute
+      ); 
 
       setValidationErrors(errors);
 

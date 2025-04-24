@@ -20,7 +20,7 @@ export const TracksContext = createContext({
   setSearch: () => {},
   addTrack: () => {},
   handleDeleteTrack: () => {},
-  updateTrack: () => {}
+  updateTrack: () => {},
 });
 
 export function TracksProvider({ children }) {
@@ -35,7 +35,6 @@ export function TracksProvider({ children }) {
   const [selectedArtistForFilter, setSelectedArtistForFilter] = useState();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
-  
 
   useEffect(() => {
     const loadTracks = async () => {
@@ -113,11 +112,9 @@ export function TracksProvider({ children }) {
   };
 
   const handleDeleteTrack = (trackId) => {
-    const idsToDelete = Array.isArray(trackId) ? trackId : [trackId];
-
     setTracks((prevTracks) => ({
       ...prevTracks,
-      data: prevTracks?.data.filter((track) => !idsToDelete.includes(track.id)),
+      data: prevTracks.data?.filter((track) => track.id !== trackId),
     }));
   };
 
@@ -147,7 +144,7 @@ export function TracksProvider({ children }) {
     setSearch,
     addTrack,
     handleDeleteTrack,
-    updateTrack
+    updateTrack,
   };
 
   return <TracksContext value={ContextValue}>{children}</TracksContext>;

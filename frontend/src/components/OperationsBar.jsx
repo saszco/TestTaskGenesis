@@ -32,7 +32,7 @@ export default function OperationsBar() {
     initialTracks,
     setSelectedArtistForFilter,
     search,
-    setSearch
+    setSearch,
   } = useContext(TracksContext);
 
   const options = genres.map((genre) => ({
@@ -63,6 +63,7 @@ export default function OperationsBar() {
             { label: "Artist", value: "artist" },
             { label: "Album", value: "album" },
           ]}
+          data-testid="sort-select"
         />
         <Button
           size="large"
@@ -94,6 +95,7 @@ export default function OperationsBar() {
         options={options}
         onChange={(value) => setSelectedGenresForFilter(value || [])}
         placeholder="Filter by genres"
+        data-testid="filter-genre"
       />
       <Divider type="vertical" style={{ borderColor: "#2c8bc7", height: 30 }} />
       <Select
@@ -105,6 +107,7 @@ export default function OperationsBar() {
         size="large"
         options={artistsOptions}
         onChange={(value) => setSelectedArtistForFilter(value || [])}
+        data-testid="filter-artist"
       />
       <Divider type="vertical" style={{ borderColor: "#2c8bc7", height: 30 }} />
       <Input
@@ -114,6 +117,7 @@ export default function OperationsBar() {
         placeholder="Search.."
         value={search || ""}
         onChange={(event) => setSearch(event.target.value)}
+        data-testid="search-input"
       />
     </div>
   );

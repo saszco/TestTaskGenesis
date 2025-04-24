@@ -37,7 +37,7 @@ export async function fetchTracks({
 
 export async function deleteTrack(id) {
   await axios.delete(`/tracks/${id}`, {
-    data: { id }, //look at this then later
+    data: { id }
   });
 }
 

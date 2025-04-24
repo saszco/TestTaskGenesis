@@ -10,45 +10,34 @@ import {
 import TrackDataInput from "./TrackDataInput";
 import { validateAudioFormat, validateAudioSize } from "../utils/validation";
 import { uploadTrackAudio } from "../api/tracks-api";
+import useToast from "../hooks/useToast";
 
 export default function TrackItem(trackData) {
   const { id, title, artist, album, genres, coverImage, audioFile, onPlay } =
     trackData;
-  const {
-    handleDeleteTrack,
-    updateTrack
-  } = useContext(TracksContext);
+  const { handleDeleteTrack, updateTrack } = useContext(TracksContext);
   const [loading, setLoading] = useState(false);
-  const [messageApi, contextHolder] = message.useMessage();
   const audioUrl = `http://localhost:8000/api/files/${audioFile}`;
   const audioRef = useRef(null);
   const editFormRef = useRef(null);
   const [isModalOpen, setIsModalOpen] = useState({
-      editing: false,
-      deletingAudio: false,
-      deletingTrack: false,
-      deletingSelectedTracks: false
-    });
-
-  function showMessage(type, content, duration) {
-    messageApi.open({
-      type: type,
-      content: content,
-      duration: duration,
-    });
-  }
+    editing: false,
+    deletingAudio: false,
+    deletingTrack: false,
+    deletingSelectedTracks: false,
+  });
+  const { showMessage, ToastContainer } = useToast();
 
   async function handleConfirmDeleting(id) {
     setLoading(true);
-
     try {
       await deleteTrack(id);
     } catch (error) {
-      showMessage("error", "Error deleting track", 5);
+      showMessage("error", "Error deleting track");
       console.error("Error deleting track:", error.message);
       setLoading(false);
     } finally {
-      showMessage("success", "Track deleted successfully", 5);
+      showMessage("success", "Track deleted successfully");
       setTimeout(() => {
         handleDeleteTrack(id);
         setLoading(false);
@@ -62,8 +51,7 @@ export default function TrackItem(trackData) {
       console.error("Audio file already uploaded");
       showMessage(
         "warning",
-        'Audio file already uploaded. Click "Edit" if you want to change',
-        5
+        'Audio file already uploaded. Click "Edit" if you want to change'
       );
       return;
     }
@@ -72,10 +60,9 @@ export default function TrackItem(trackData) {
       console.error("Incompatible file format. Only mp3 and wav are supported");
       showMessage(
         "error",
-        "Incompatible file format. Provide MP3 or WAV file",
-        5
+        "Incompatible file format. Provide MP3 or WAV file"
       );
-      onError("Incompatible file format");
+      onError("Incompatible file format", file);
       return;
     }
 
@@ -83,26 +70,24 @@ export default function TrackItem(trackData) {
       console.error("File size is too large. Maximum file size is 10MB");
       showMessage(
         "error",
-        "File size is too large. Maximum file size is 10 MB",
-        5
+        "File size is too large. Maximum file size is 10 MB"
       );
-      onError("File size is too large");
+      onError("File size is too large", file);
       return;
     }
 
     if (!audioFile) {
       try {
         const data = await uploadTrackAudio(id, file);
-
-        updateTrack(id, { audioFile: data.audioFile });
-
-        console.log("Uploaded successfully", data);
-        showMessage("success", "Track uploaded successfully", 3);
-        onSuccess("Track uploaded");
+        updateTrack(id, { audioFile: data?.audioFile });
       } catch (error) {
         console.error("Error uploading track:", error.message);
-        showMessage("error", "Error uploading track", 5);
-        onError(error.message);
+        showMessage("error", "Error uploading track");
+        onError("Error uploading track", file);
+      }finally{
+        onSuccess("ok", file);
+        showMessage("success", "Track uploaded successfully");
+        console.log("Uploaded successfully");
       }
     }
   }
@@ -124,8 +109,10 @@ export default function TrackItem(trackData) {
       editedTrackData?.genres !== genres;
 
     if (!isChanged) {
-      showMessage("warning", "No changes were made to the track data", 5);
-      setIsModalOpen((prev) => ({ ...prev, editing: false }));
+      showMessage("warning", "No changes were made to the track data");
+      setTimeout(() => {
+        setIsModalOpen((prev) => ({ ...prev, editing: false }));
+      }, 2500)
       return;
     }
 
@@ -137,13 +124,13 @@ export default function TrackItem(trackData) {
 
     try {
       const editedTrack = await updateTrackData(id, editedTrackData);
-      showMessage("success", "Track data edited successfully", 5);
       updateTrack(id, editedTrack);
     } catch (error) {
       console.error("Error updating track");
       setLoading(false);
-      showMessage("error", "Error updating track", 5);
+      showMessage("error", "Error updating track");
     } finally {
+      showMessage("success", "Track data edited successfully");
       setTimeout(() => {
         setLoading(false);
         setIsModalOpen((prev) => ({ ...prev, editing: false }));
@@ -157,9 +144,9 @@ export default function TrackItem(trackData) {
       await deleteTrackAudio(id);
     } catch (error) {
       console.error("Error deleting audio", error.message);
-      showMessage("error", "Error deleting audio", 5);
+      showMessage("error", "Error deleting audio");
     } finally {
-      showMessage("success", "Audio deleted successfully", 5);
+      showMessage("success", "Audio deleted successfully");
       setTimeout(() => {
         setLoading(false);
         setIsModalOpen((prev) => ({ ...prev, deletingAudio: false }));
@@ -173,14 +160,14 @@ export default function TrackItem(trackData) {
       editing: false,
       deletingAudio: false,
       deletingTrack: false,
-      deletingSelectedTracks: false
+      deletingSelectedTracks: false,
     });
     setLoading(false);
   }
 
   return (
     <>
-      {contextHolder}
+      {<ToastContainer />}
       <div
         className="flex flex-row gap-5 max-xl:flex-wrap"
         data-testid={`track-item-${id}`}
@@ -226,10 +213,11 @@ export default function TrackItem(trackData) {
                 src={audioUrl}
                 ref={audioRef}
                 onPlay={handlePlay}
+                data-testid={`audio-player-${id}`}
               ></audio>
             ) : (
-              <p className="mr-8 max-md:mt-4 text-blue-200">
-                Click upload track
+              <p className="mr-8 max-md:mt-4 text-blue-100">
+                Click upload track button
               </p>
             )}
           </div>
@@ -240,8 +228,13 @@ export default function TrackItem(trackData) {
             open={isModalOpen.deletingAudio}
             onOk={() => handleAudioDeleting(id)}
             onCancel={handleCloseModal}
+            data-testid="confirm-dialog"
             footer={[
-              <Button key="back" onClick={handleCloseModal}>
+              <Button
+                key="back"
+                onClick={handleCloseModal}
+                data-testid="cancel-delete"
+              >
                 Cancel
               </Button>,
               <Button
@@ -251,6 +244,7 @@ export default function TrackItem(trackData) {
                 variant="solid"
                 onClick={() => handleAudioDeleting(id)}
                 loading={loading}
+                data-testid="confirm-delete"
               >
                 Delete audio
               </Button>,
@@ -302,6 +296,7 @@ export default function TrackItem(trackData) {
             open={isModalOpen.editing}
             onOk={handleEditingTrack}
             onCancel={handleCloseModal}
+            data-testid="confirm-dialog"
             footer={[
               <Button key="back" onClick={handleCloseModal}>
                 Cancel
@@ -342,8 +337,13 @@ export default function TrackItem(trackData) {
             open={isModalOpen.deletingTrack}
             onOk={() => handleConfirmDeleting(id)}
             onCancel={handleCloseModal}
+            data-testid="confirm-dialog"
             footer={[
-              <Button key="back" onClick={handleCloseModal}>
+              <Button
+                key="back"
+                onClick={handleCloseModal}
+                data-testid="cancel-delete"
+              >
                 Cancel
               </Button>,
               <Button
@@ -353,6 +353,7 @@ export default function TrackItem(trackData) {
                 variant="solid"
                 onClick={() => handleConfirmDeleting(id)}
                 loading={loading}
+                data-testid="confirm-delete"
               >
                 Delete
               </Button>,
